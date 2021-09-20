@@ -24,10 +24,11 @@ void *pi_calc(void *args) {
         sum += 4.0/(1.0+x*x);
     }
     sum *= h;
-    pthread_mutex_lock(&mutex);
+    int check = pthread_mutex_lock(&mutex);
+    assert(check==0);
     pi += sum;
     pthread_mutex_unlock(&mutex);
-    pthread_exit(0);
+    return NULL;
 }
 
 int main (int argc, char**argv) {

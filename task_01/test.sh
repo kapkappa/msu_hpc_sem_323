@@ -11,3 +11,6 @@ echo "10 billion segments, with 2 threads"
 
 echo "10 billion segments, with 4 threads"
 ./prog 10000000000 4
+
+echo "10 billion segments, with 10 threads"
+./prog 10000000000 10

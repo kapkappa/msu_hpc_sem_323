@@ -1,4 +1,6 @@
 CC = gcc
+#CC = clang
+#CC = icpc
 CFLAGS = -g -Wall -Wextra -Wpedantic -Werror -pthread
 
 all: clean prog test
