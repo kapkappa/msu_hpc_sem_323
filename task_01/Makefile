@@ -1,4 +1,4 @@
-CC = gcc
+#CC = gcc
 #CC = clang
 #CC = icpc
 CFLAGS = -g -Wall -Wextra -Wpedantic -Werror -pthread
