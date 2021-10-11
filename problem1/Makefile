@@ -1,7 +1,7 @@
 CC = gcc
 CXX = g++
 
-CFLAGS = -g -Wall -Wextra -Wpedantic
+CFLAGS = -O3 -Wall -Wextra -Wpedantic
 CXXFLAGS = -std=c++17 -Wall
 
 all: clean gen prog
