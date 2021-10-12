@@ -21,7 +21,7 @@ struct dense {
     dense(int32_t nrows_, int32_t ncols_) : nrows(nrows_), ncols(ncols_) {
         val.resize(nrows*ncols);
         for (int64_t it = 0; it < nrows * ncols; it++) {
-            val.emplace_back(0);
+            val.push_back(0);
         }
     }
 
@@ -60,10 +60,10 @@ void write(std::string fname, const dense<F> M) {
 
     for (int32_t i = 0; i < M.nrows; i++) {
         for (int32_t j = 0; j < M.ncols; j++) {
-            fwrite(M.val.data(), sizeof(F), M.nrows * M.ncols, f);
+            fwrite(&M.val[i * M.nrows + j], sizeof(F), 1, f);
         }
     }
-    fclose(f)   ;
+    fclose(f);
 }
 
 int main(int argc, char** argv) {
@@ -71,14 +71,16 @@ int main(int argc, char** argv) {
     cout << "Enter matrix dimensions:\n";
     cin >> row1;
     cin >> col1;
-    dense<I32> A(row1, col1);
-    A.fill();
-//    A.print();
+    cout << "Enter elem size\n";
 
-    cout << "Enter matrix filename\n";
+//    dense<I32> Matrix(row1, col1);
+    dense<I64> Matrix(row1, col1);
+
+    Matrix.fill();
+
     std::string filename;
     cin >> filename;
+    write(filename, Matrix);
 
-    write(filename, A);
     return 0;
 }
