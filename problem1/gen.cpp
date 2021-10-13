@@ -16,9 +16,10 @@ template <typename F>
 struct dense {
     int32_t nrows = 0;
     int32_t ncols = 0;
+    char type;
     std::vector<F> val;
 
-    dense(int32_t nrows_, int32_t ncols_) : nrows(nrows_), ncols(ncols_) {
+    dense(int32_t nrows_, int32_t ncols_, char type_) : nrows(nrows_), ncols(ncols_), type(type_) {
         val.resize(nrows*ncols);
         for (int64_t it = 0; it < nrows * ncols; it++) {
             val.push_back(0);
@@ -54,8 +55,7 @@ template <typename F>
 void write(std::string fname, const dense<F> M) {
     FILE *f = fopen(fname.c_str(), "w");
 
-    char type = 'd';
-    fwrite(&type, sizeof(char), 1, f);
+    fwrite(&M.type, sizeof(char), 1, f);
     fwrite(&M.ncols, sizeof(int32_t), 1, f);
 
     for (int32_t i = 0; i < M.nrows; i++) {
@@ -71,13 +71,13 @@ int main(int argc, char** argv) {
     cout << "Enter matrix dimensions:\n";
     cin >> row1;
     cin >> col1;
-    cout << "Enter elem size\n";
 
-//    dense<I32> Matrix(row1, col1);
-    dense<I64> Matrix(row1, col1);
+//    dense<I32> Matrix(row1, col1, 'd');
+    dense<I64> Matrix(row1, col1, 'l');
 
     Matrix.fill();
 
+    cout << "Enter matrix name\n";
     std::string filename;
     cin >> filename;
     write(filename, Matrix);

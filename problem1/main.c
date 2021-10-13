@@ -264,8 +264,6 @@ int main (int argc, char**argv) {
 //    print(&A);
 //    print(&B);
 
-    printf("Type: %c\n", type);
-
     void (*multiply) (dense*, dense*, dense*);
 
     switch (tag) {
