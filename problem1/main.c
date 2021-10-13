@@ -41,7 +41,7 @@ void read_matrix (char *filename, dense *M) {
             cnt += fread(&M->vals[i], sizeof(int32_t), 1, file);
         }
     } else if (M->type == 'l') {
-        M->big_vals = (int64_t *)malloc(elems * sizeof(int32_t));
+        M->big_vals = (int64_t *)malloc(elems * sizeof(int64_t));
         for (i = 0; i < elems; i++) {
             cnt += fread(&M->big_vals[i], sizeof(int64_t), 1, file);
         }
@@ -153,7 +153,7 @@ void jki_dgemm (dense *A, dense *B, dense *C) {
     }
 }
 
-void  kji_dgemm (dense *A, dense *B, dense *C) {
+void kji_dgemm (dense *A, dense *B, dense *C) {
     int32_t i,j,k;
     int32_t nrows = A->nrows;
     for (k = 0; k < nrows; k++) {
@@ -164,6 +164,85 @@ void  kji_dgemm (dense *A, dense *B, dense *C) {
         }
     }
 }
+
+/////////////////////////////////////////////////////////////////////
+//  BIG FUNCS
+
+void ijk_dgemm_big (dense *A, dense *B, dense *C) {
+    int32_t i,j,k;
+    int32_t nrows = A->nrows;
+    for (i = 0; i < nrows; i++) {
+        for (j = 0; j < nrows; j++) {
+            int64_t sum = 0;
+            for (k = 0; k < nrows; k++)
+                sum += A->big_vals[i * nrows + k] * B->big_vals[k * nrows + j];
+            C->big_vals[i * nrows + j] = sum;
+        }
+    }
+}
+
+void ikj_dgemm_big (dense *A, dense *B, dense *C) {
+    int32_t i,j,k;
+    int32_t nrows = A->nrows;
+    for (i = 0; i < nrows; i++) {
+        for (k = 0; k < nrows; k++) {
+            int64_t r = A->big_vals[i * nrows + k];
+            for (j = 0; j < nrows; j++)
+                C->big_vals[i * nrows + j] += r * B->big_vals[k * nrows + j];
+        }
+    }
+}
+
+void kij_dgemm_big (dense *A, dense *B, dense *C) {
+    int32_t i,j,k;
+    int32_t nrows = A->nrows;
+    for (k = 0; k < nrows; k++) {
+        for (i = 0; i < nrows; i++) {
+            int64_t r = A->big_vals[i * nrows + k];
+            for (j = 0; j < nrows; j++)
+                C->big_vals[i * nrows + j] += r * B->big_vals[k * nrows + j];
+        }
+    }
+}
+
+void jik_dgemm_big (dense *A, dense *B, dense *C) {
+    int32_t i,j,k;
+    int32_t nrows = A->nrows;
+    for (j = 0; j < nrows; j++) {
+        for (i = 0; i < nrows; i++) {
+            int64_t sum = 0;
+            for (k = 0; k < nrows; k++)
+                sum += A->big_vals[i * nrows + k] * B->big_vals[k * nrows + j];
+            C->big_vals[i * nrows + j] = sum;
+        }
+    }
+}
+
+void jki_dgemm_big (dense *A, dense *B, dense *C) {
+    int32_t i,j,k;
+    int32_t nrows = A->nrows;
+    for (j = 0; j < nrows; j++) {
+        for (k = 0; k < nrows; k++) {
+            int64_t r = B->big_vals[k * nrows + j];
+            for (i = 0; i < nrows; i++)
+                C->big_vals[i * nrows + j] += A->big_vals[i * nrows + k] * r;
+        }
+    }
+}
+
+void kji_dgemm_big (dense *A, dense *B, dense *C) {
+    int32_t i,j,k;
+    int32_t nrows = A->nrows;
+    for (k = 0; k < nrows; k++) {
+        for (j = 0; j < nrows; j++) {
+            int64_t r = B->big_vals[k * nrows + j];
+            for (i = 0; i < nrows; i++)
+                C->big_vals[i * nrows + j] += A->big_vals[i * nrows + k] * r;
+        }
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
 
 int main (int argc, char**argv) {
     assert(argc == 5);
@@ -179,49 +258,53 @@ int main (int argc, char**argv) {
     assert (A.type == B.type);
     C.nrows = A.nrows;
     C.vals = (int32_t *)calloc(C.nrows * C.nrows, sizeof(int32_t));
-    C.type = A.type;
-    double t1 = 0.0, t2 = 0.0;
+    C.big_vals = (int64_t *)calloc(C.nrows * C.nrows, sizeof(int64_t));
+    char type = A.type;
+    C.type = type;
 //    print(&A);
 //    print(&B);
+
+    printf("Type: %c\n", type);
+
+    void (*multiply) (dense*, dense*, dense*);
+
     switch (tag) {
         case IJK:
-            t1 = timer();
-            ijk_dgemm(&A, &B, &C);
-            t2 = timer();
+            multiply = (type == 'd' ) ? ijk_dgemm : ijk_dgemm_big;
             break;
         case IKJ:
-            t1 = timer();
-            ikj_dgemm(&A, &B, &C);
-            t2 = timer();
+            multiply = (type == 'd' ) ? ikj_dgemm : ikj_dgemm_big;
             break;
         case KIJ:
-            t1 = timer();
-            kij_dgemm(&A, &B, &C);
-            t2 = timer();
+            multiply = (type == 'd' ) ? kij_dgemm : kij_dgemm_big;
             break;
         case JIK:
-            t1 = timer();
-            jik_dgemm(&A, &B, &C);
-            t2 = timer();
+            multiply = (type == 'd' ) ? jik_dgemm : jik_dgemm_big;
             break;
         case JKI:
-            t1 = timer();
-            jki_dgemm(&A, &B, &C);
-            t2 = timer();
+            multiply = (type == 'd' ) ? jki_dgemm : jki_dgemm_big;
             break;
         case KJI:
-            t1 = timer();
-            kji_dgemm(&A, &B, &C);
-            t2 = timer();
+            multiply = (type == 'd' ) ? kji_dgemm : kji_dgemm_big;
             break;
         default:
             break;
     }
+    double t1 = timer();
+    multiply(&A, &B, &C);
+    double t2 = timer();
     printf("Elapsed time: %.5f\n", t2-t1);
 //    print(&C);
     write_matrix(C_name, &C);
-    free(A.vals);
-    free(B.vals);
-    free(C.vals);
+
+    if (type == 'd') {
+        free(A.vals);
+        free(B.vals);
+        free(C.vals);
+    } else {
+        free(A.big_vals);
+        free(B.big_vals);
+        free(C.big_vals);
+    }
     return 0;
 }
