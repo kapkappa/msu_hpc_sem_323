@@ -288,10 +288,21 @@ int main (int argc, char**argv) {
         default:
             break;
     }
-    double t1 = timer();
-    multiply(&A, &B, &C);
-    double t2 = timer();
-    printf("Elapsed time: %.5f\n", t2-t1);
+
+    int i, nwarmups = 3;
+    for (i = 0; i < nwarmups; i++)
+        multiply(&A, &B, &C);
+
+    int niters = 10;
+    double est_time = 0.0;
+    for (i = 0; i < niters; i++) {
+        double t1 = timer();
+        multiply(&A, &B, &C);
+        double t2 = timer();
+        est_time += t2-t1;
+
+    }
+    printf("Elapsed time: %.5f\n", est_time/(double)niters);
 //    print(&C);
     write_matrix(C_name, &C);
 
