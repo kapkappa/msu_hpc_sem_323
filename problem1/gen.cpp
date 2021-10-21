@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <cassert>
 
 using std::cout;
 using std::endl;
@@ -52,18 +53,21 @@ struct dense {
 };
 
 template <typename F>
-void write(std::string fname, const dense<F> M) {
+void write(std::string fname, const dense<F>& M) {
     FILE *f = fopen(fname.c_str(), "w");
 
-    fwrite(&M.type, sizeof(char), 1, f);
-    fwrite(&M.ncols, sizeof(int32_t), 1, f);
-
+    int cnt = 0;
+    cnt = fwrite(&M.type, sizeof(char), 1, f);
+    cnt += fwrite(&M.ncols, sizeof(int32_t), 1, f);
+    assert(cnt == 2);
+    cnt = 0;
     for (int32_t i = 0; i < M.nrows; i++) {
         for (int32_t j = 0; j < M.ncols; j++) {
-            fwrite(&M.val[i * M.nrows + j], sizeof(F), 1, f);
+            cnt += fwrite(&M.val[i * M.nrows + j], sizeof(F), 1, f);
         }
     }
     fclose(f);
+    assert(cnt == M.nrows * M.ncols);
 }
 
 int main(int argc, char** argv) {
@@ -71,7 +75,13 @@ int main(int argc, char** argv) {
     cout << "Enter matrix dimensions:\n";
     cin >> row1;
     cin >> col1;
-
+/*
+    char matrix_type;
+    cout << "Enter matrix type\n'd' for int32 and 'l' for int64\n";
+    cin >> type;
+    switch (type) {
+        case 'd':
+*/
 //    dense<I32> Matrix(row1, col1, 'd');
     dense<I64> Matrix(row1, col1, 'l');
 
