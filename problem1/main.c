@@ -245,7 +245,12 @@ void kji_dgemm_big (dense *A, dense *B, dense *C) {
 //////////////////////////////////////////////////////////////////////////////
 
 int main (int argc, char**argv) {
-    assert(argc == 5);
+    if (argc != 5) {
+        printf("Need 4 args!\n");
+        printf("Enter 3 matrices, then enter multiplication type tag (0 .. 5)\n");
+        return 1;
+    }
+
     char *A_name = argv[1];
     char *B_name = argv[2];
     char *C_name = argv[3];
@@ -317,3 +322,4 @@ int main (int argc, char**argv) {
     }
     return 0;
 }
+
