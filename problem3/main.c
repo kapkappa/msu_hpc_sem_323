@@ -22,11 +22,16 @@ parallel_sort(int64_t*array, int array_size) {
      omp_set_num_threads(nthreads);
      printf("nthreads: %d\n", nthreads);
 
+//1. divide array to (array_size / nthreads) chunks
+
+
+//2. every threads work with its own chunk
 #pragma omp parallel for private(i) shared(array) schedule(static)
         for (i = 0; i < array_size; i++)
             printf("%d ", array[i]);
-
     printf("\n");
+
+//3. sort chunks
 
 }
 
