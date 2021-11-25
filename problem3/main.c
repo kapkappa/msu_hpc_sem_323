@@ -3,24 +3,24 @@
 #include <stdlib.h>
 #include <omp.h>
 
+#define MAX_THREADS_NUMBER omp_get_max_threads()
+
 double time_start, time_end;
 int nthreads = 1;
 
-void fill_array(int64_t* array, unsigned int array_size) {
+void fill_array(int64_t* array, int array_size) {
     int i;
     srand(123);
-    
     for (i = 0; i < array_size; i++) {
         array[i] = rand();
     }
 }
 
-parallel_sort(int64_t*array, unsigned int array_size) {
+parallel_sort(int64_t*array, int array_size) {
     int i;
 
      omp_set_num_threads(nthreads);
      printf("nthreads: %d\n", nthreads);
-
 
 #pragma omp parallel for private(i) shared(array) schedule(static)
         for (i = 0; i < array_size; i++)
@@ -31,11 +31,20 @@ parallel_sort(int64_t*array, unsigned int array_size) {
 }
 
 int main(int argc, char**argv) {
-    unsigned int array_size = 0;
+    int array_size = 0;
+    nthreads = omp_get_max_threads();
+
     do {
         printf("Enter valid array size\n");
         scanf("%d", &array_size);
-    } while (array_size == 0);
+    } while (array_size <= 0);
+
+    do {
+        printf("Enter number of threads (max threads available: %d)\n", nthreads);
+        scanf("%d", &nthreads);
+    } while ((nthreads <=0) || (nthreads > MAX_THREADS_NUMBER ));
+
+
     int64_t* array = (int64_t*)malloc(sizeof(int64_t) * array_size);
     fill_array(array, array_size);
 
