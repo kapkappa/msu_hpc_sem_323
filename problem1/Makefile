@@ -1,11 +1,11 @@
-BUILD ?= Debug
-#BUILD = Release
+#BUILD ?= Debug
+BUILD = Release
 
 CC = gcc
 CXX = g++
 
 CFLAGS = -O0 -Wall -Werror -Wextra -Wpedantic
-CXXFLAGS = -std=c++17 -Wall
+CXXFLAGS = -std=c++17 -w
 
 ifeq ($(BUILD), Debug)
 CFLAGS += -fsanitize=address
