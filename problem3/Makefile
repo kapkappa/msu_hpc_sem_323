@@ -2,10 +2,13 @@ CC = gcc
 CFLAGS = -O3 -w -fopenmp
 
 
-all: clean prog
+all: clean omp qsort
 
-prog:
-	$(CC) $(CFLAGS) main.c -o prog
+omp:
+	$(CC) $(CFLAGS) main.c -o prog_omp
+
+qsort:
+	$(CC) $(CFLAGS) qsort.c -o prog_qs
 
 clean:
-	rm -f prog
+	rm -f prog_omp prog_qs

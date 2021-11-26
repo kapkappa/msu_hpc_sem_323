@@ -8,11 +8,9 @@
 #define MAX_THREADS_NUMBER omp_get_max_threads()
 
 double time_start, time_end;
-int nthreads = 1;
 
 void fill_array(int* array, int array_size) {
     int i;
-    srand(123);
     for (i = 0; i < array_size; i++) {
         array[i] = rand();
     }
@@ -66,18 +64,14 @@ int is_sorted(int* array, int array_size) {
 }
 
 int main(int argc, char**argv) {
-    int array_size = 0;
-    nthreads = omp_get_max_threads();
+    srand(123);
 
-    do {
-        printf("Enter valid array size\n");
-        scanf("%d", &array_size);
-    } while (array_size <= 0);
+    int array_size, nthreads;
 
-    do {
-        printf("Enter number of threads (max threads available: %d)\n", nthreads);
-        scanf("%d", &nthreads);
-    } while ((nthreads <=0) || (nthreads > MAX_THREADS_NUMBER ));
+    array_size  = (argc > 1) ? atoi(argv[1]) : 1000000;
+    assert(array_size > 0);
+    nthreads = (argc > 2) ? atoi(argv[2]) : 1;
+    assert(nthreads > 0 && nthreads < MAX_THREADS_NUMBER);
 
     omp_set_dynamic(0);
     omp_set_num_threads(nthreads);
