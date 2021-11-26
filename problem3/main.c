@@ -6,6 +6,7 @@
 #include <assert.h>
 
 #define MAX_THREADS_NUMBER omp_get_max_threads()
+int nthreads = 1;
 
 double time_start, time_end;
 
@@ -16,10 +17,20 @@ void fill_array(int* array, int array_size) {
     }
 }
 
-void merge(int* array, int array_size, int* tmp) {
-    int i = 0, j = array_size / 2, ti = 0;
+int compare_ints(const void* a, const void* b) {
+    int arg1 = *(const int*)a;
+    int arg2 = *(const int*)b;
+    if (arg1 < arg2) return -1;
+    if (arg1 > arg2) return 1;
+    return 0;
+}
 
-   while (i < array_size / 2 && j < array_size) {
+
+void merge(int* array, int middle, int array_size, int* tmp) {
+
+    int i = 0, j = middle, ti = 0;
+
+   while (i < middle && j < array_size) {
       if (array[i] < array[j]) {
          tmp[ti] = array[i];
          ti++;
@@ -30,12 +41,12 @@ void merge(int* array, int array_size, int* tmp) {
          j++;
       }
    }
-   while (i<array_size/2) { /* finish up lower half */
+   while (i<middle) {
       tmp[ti] = array[i];
       ti++;
       i++;
    }
-   while (j<array_size) { /* finish up upper half */
+   while (j<array_size) {
       tmp[ti] = array[j];
       ti++;
       j++;
@@ -45,15 +56,35 @@ void merge(int* array, int array_size, int* tmp) {
 
 void merge_sort(int* array, int array_size, int* tmp) {
     if (array_size < 2) return;
+    int i = 0;
+    int chunk_size = array_size / nthreads;
+    int extra_chunk = array_size % nthreads;
+/*
+    while (i < nthreads) {
+        if (i == 0) extra_chunk = array_size % nthreads;
+    #pragma omp task shared(array)
+    {
+        qsort(array+i*chunk_size+extra_chunk, chunk_size+extra_chunk, sizeof(int), compare_ints);
+    }
+        i++;
+    }
+*/
+    for (i = 0; i < nthreads; i++) {
+        if (i == 0) {
+            chunk_size += extra_chunk;
+            extra_chunk = 0;
+        }
+    #pragma omp task shared(array)
+        qsort(array+ i*chunk_size + extra_chunk, chunk_size, sizeof(int), compare_ints);
+    }
 
-#pragma omp task shared(array) if(array_size > 100)
-    merge_sort(array, array_size/2, tmp);
-
-#pragma omp task shared(array) if(array_size > 100)
-    merge_sort(array+(array_size/2), array_size - (array_size/2), tmp + (array_size/2));
 
 #pragma omp taskwait
-    merge(array, array_size, tmp);
+    for (i = 1; i < nthreads; i++) {
+        int current_border = chunk_size * i + extra_chunk;
+        int current_size = current_border + chunk_size;
+        merge(array, current_border, current_size, tmp);
+    }
 }
 
 int is_sorted(int* array, int array_size) {
@@ -66,12 +97,12 @@ int is_sorted(int* array, int array_size) {
 int main(int argc, char**argv) {
     srand(123);
 
-    int array_size, nthreads;
+    int array_size;
 
     array_size  = (argc > 1) ? atoi(argv[1]) : 1000000;
     assert(array_size > 0);
     nthreads = (argc > 2) ? atoi(argv[2]) : 1;
-    assert(nthreads > 0 && nthreads < MAX_THREADS_NUMBER);
+    assert(nthreads > 0 && nthreads <= MAX_THREADS_NUMBER);
 
     omp_set_dynamic(0);
     omp_set_num_threads(nthreads);
@@ -92,7 +123,7 @@ int main(int argc, char**argv) {
 #pragma omp parallel
 {
     #pragma omp single
-       merge_sort(array, array_size, tmp);
+    merge_sort(array, array_size, tmp);
 }
     time_end = omp_get_wtime();
 
