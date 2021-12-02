@@ -25,23 +25,64 @@ int compare_ints(const void *a, const void *b) {
   return 0;
 }
 
-void merge(int *array, int middle, int array_size, int *tmp) {
-  int i = 0, j = middle, ti = 0;
+void merge(int *array, int left_array_size, int merged_array_size, int *tmp) {
+  int i = 0, j = left_array_size, ti = 0;
 
-  while (i < middle && j < array_size) {
+  while (i < left_array_size && j < merged_array_size) {
     if (array[i] < array[j]) {
       tmp[ti++] = array[i++];
     } else {
       tmp[ti++] = array[j++];
     }
   }
-  for (i; i < middle; i++) {
+  for (i; i < left_array_size; i++) {
     tmp[ti++] = array[i];
   }
-  for (j; j < array_size; j++) {
+  for (j; j < merged_array_size; j++) {
     tmp[ti++] = array[j];
   }
-  memcpy(array, tmp, array_size * sizeof(int));
+  memcpy(array, tmp, merged_array_size * sizeof(int));
+}
+
+void recursive_merge(int *array, int left_array_number, int right_array_number,
+                     int *tmp, int base_array_size) {
+
+  int chunk_size = base_array_size / nthreads;
+  int extra_chunk = base_array_size % nthreads;
+  int left_border = chunk_size * left_array_number;
+  if (left_border != 0)
+    left_border + extra_chunk;
+
+  if ((left_array_number + 1) < right_array_number) {
+    int middle_array_number = right_array_number / 2;
+#pragma omp task shared(array, tmp)
+    recursive_merge(array, left_array_number, middle_array_number, tmp,
+                    base_array_size);
+#pragma omp task shared(array, tmp)
+    recursive_merge(array, middle_array_number + 1, right_array_number, tmp,
+                    base_array_size);
+#pragma omp taskwait
+    int left_array_size =
+        chunk_size * (middle_array_number - left_array_number + 1);
+    if (left_array_number == 0)
+      left_array_size += extra_chunk;
+    int right_array_size =
+        chunk_size * (right_array_number - middle_array_number) + extra_chunk;
+    merge(array + left_border, left_array_size,
+          left_array_size + right_array_size, tmp);
+  } else {
+    if (right_array_number == left_array_number)
+      return;
+
+    int left_array_size = chunk_size;
+    if (left_array_number == 0)
+      left_array_size += extra_chunk;
+
+    int right_array_size = extra_chunk + chunk_size;
+
+    merge(array + left_border, left_array_size,
+          left_array_size + right_array_size, tmp);
+  }
 }
 
 void merge_sort(int *array, int array_size, int *tmp) {
@@ -62,11 +103,16 @@ void merge_sort(int *array, int array_size, int *tmp) {
   }
 
 #pragma omp taskwait
-  for (i = 1; i < nthreads; i++) {
-    int current_border = chunk_size * i + extra_chunk;
-    int current_size = current_border + chunk_size;
-    merge(array, current_border, current_size, tmp);
-  }
+  recursive_merge(array, 0, nthreads - 1, tmp, array_size);
+  /*
+  //number of pairs
+  int pairs_number = nthreads / 2;
+    for (i = 0; i < pairs_number; i++) {
+      int current_border = chunk_size * i + extra_chunk;
+      int current_size = current_border + chunk_size;
+      merge(array, current_border, current_size, tmp);
+    }
+  */
 }
 
 int is_sorted(int *array, int array_size) {
@@ -75,6 +121,19 @@ int is_sorted(int *array, int array_size) {
     if (array[i] < array[i - 1])
       return 0;
   return 1;
+}
+
+void fill(int *array, int array_size) {
+  int i;
+  for (i = 0; i < array_size; ++i)
+    array[i] = array_size - i;
+}
+
+void print_array(int *array, int array_size) {
+  int i;
+  for (i = 0; i < array_size; i++)
+    printf("%d ", array[i]);
+  printf("\n");
 }
 
 int main(int argc, char **argv) {
@@ -102,7 +161,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  fill_array(array, array_size);
+  //  fill_array(array, array_size);
+  fill(array, array_size);
 
   double time_start, time_end;
 
@@ -114,6 +174,7 @@ int main(int argc, char **argv) {
   }
   time_end = omp_get_wtime();
 
+  //  print_array(array, array_size);
   assert(is_sorted(array, array_size) == 1);
 
   printf("parallel sort time: %f\n", time_end - time_start);
