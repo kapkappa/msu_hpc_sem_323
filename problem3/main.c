@@ -69,7 +69,7 @@ void recursive_merge(int *array, int left_array_number, int right_array_number,
     left_border += extra_chunk;
 
   if ((left_array_number + 1) < right_array_number) {
-    int middle_array_number = right_array_number / 2;
+    int middle_array_number = (left_array_number + right_array_number) / 2;
 #pragma omp task shared(array)
     recursive_merge(array, left_array_number, middle_array_number,
                     base_array_size);

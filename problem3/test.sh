@@ -6,4 +6,5 @@
 ./prog_omp 1000000 4
 ./prog_omp 1000000 6
 ./prog_omp 1000000 8
+./prog_omp 1000000 10
 ./prog_omp 1000000 12
