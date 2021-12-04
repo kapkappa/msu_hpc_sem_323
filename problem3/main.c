@@ -15,27 +15,11 @@ void fill_array(int *array, int array_size) {
   }
 }
 
-void fill(int *array, int array_size) {
-  int i;
-  for (i = 0; i < array_size; ++i)
-    array[i] = array_size - i;
-}
-
 void print_array(int *array, int array_size) {
   int i;
   for (i = 0; i < array_size; i++)
     printf("%d ", array[i]);
   printf("\n");
-}
-
-int compare_ints(const void *a, const void *b) {
-  int arg1 = *(const int *)a;
-  int arg2 = *(const int *)b;
-  if (arg1 < arg2)
-    return -1;
-  if (arg1 > arg2)
-    return 1;
-  return 0;
 }
 
 void merge(int *array, int left_array_size, int merged_array_size) {
@@ -57,6 +41,16 @@ void merge(int *array, int left_array_size, int merged_array_size) {
   }
   memcpy(array, tmp, merged_array_size * sizeof(int));
   free(tmp);
+}
+
+void merge_sort(int *array, int left_border, int right_border) {
+  if (left_border < right_border) {
+    int middle_border = (right_border + left_border) / 2;
+    merge_sort(array, left_border, middle_border);
+    merge_sort(array, middle_border + 1, right_border);
+    merge(array + left_border, middle_border - left_border + 1,
+          right_border - left_border + 1);
+  }
 }
 
 void recursive_merge(int *array, int left_array_number, int right_array_number,
@@ -98,7 +92,7 @@ void recursive_merge(int *array, int left_array_number, int right_array_number,
   }
 }
 
-void merge_sort(int *array, int array_size) {
+void parallel_merge_sort(int *array, int array_size) {
   if (array_size < 2)
     return;
   int i;
@@ -115,8 +109,7 @@ void merge_sort(int *array, int array_size) {
     }
 
 #pragma omp task shared(array)
-    qsort(array + i * chunk_size + extra_chunk, chunk_size, sizeof(int),
-          compare_ints);
+    merge_sort(array + i * chunk_size + extra_chunk, 0, chunk_size - 1);
   }
 
 #pragma omp taskwait
@@ -148,8 +141,7 @@ int main(int argc, char **argv) {
   int *array = (int *)malloc(sizeof(int) * array_size);
   assert(array != NULL);
 
-  //  fill_array(array, array_size);
-  fill(array, array_size);
+  fill_array(array, array_size);
 
   double time_start, time_end;
 
@@ -157,7 +149,7 @@ int main(int argc, char **argv) {
 #pragma omp parallel
   {
 #pragma omp single
-    merge_sort(array, array_size);
+    parallel_merge_sort(array, array_size);
   }
   time_end = omp_get_wtime();
 
