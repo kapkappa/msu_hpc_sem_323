@@ -26,14 +26,11 @@ double* read_matrix(uint32_t *rows, uint32_t *cols, enum Type n, char*arg) {
         perror("there is no such configuration");
         free(path);
         return NULL;
-//        int status = 0;
-//        MPI_Finalize();
-//        exit(status);
     }
     int cnt;
     cnt = fread(rows, sizeof(uint32_t), 1, file);
     cnt = fread(cols, sizeof(uint32_t), 1, file);
-    if (!cnt) {
+    if (cnt != 2) {
         perror("err while reading matrix");
         exit(1);
     }

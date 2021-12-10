@@ -19,10 +19,13 @@ CXXFLAGS += -Wall -O0
 CCFLAGS += -Wall -O0 -DDEBUG
 endif
 
-all: clean prog
+all: clean prog gen
 
 prog:
 	$(MPIC) $(CFLAGS) main.c -o prog
+
+gen:
+	$(CXX) $(CXXFLAGS) gen.cpp -o gen
 
 clean:
 	rm -rf p*

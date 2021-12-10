@@ -9,7 +9,7 @@ int main (int argc, char** argv) {
 
     MPI_Init(&argc, &argv);
 
-    if (argc != 2) {
+    if (argc != 4) {
         printf("Please, enter matrices!\n");
         MPI_Finalize();
         return 0;
@@ -33,7 +33,11 @@ int main (int argc, char** argv) {
 
     uint32_t nrows = 0, ncols = 0;
     if (rank == 0) {
-        vals = read_matrix(&nrows, &ncols, MATRIX, argv[1]);
+        vals = read_matrix(&nrows, &ncols, MATRIX, argv[2]);
+        if (!vals) {
+            MPI_Finalize();
+            return 1;
+        }
     }
 
     MPI_Bcast(&nrows, 1, MPI_UINT32_T, 0, MPI_COMM_WORLD);
