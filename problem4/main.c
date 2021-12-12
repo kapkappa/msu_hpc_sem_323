@@ -147,6 +147,7 @@ int main(int argc, char **argv) {
     disps[l] = block_rows * ncols * l + extra_rows * ncols;
   }
   sendcounts[0] += extra_rows * ncols;
+  disps[0] = 0;
   MPI_Scatterv(vals, sendcounts, disps, MPI_INT64_T, local_val, rows * ncols,
                MPI_INT64_T, 0, MPI_COMM_WORLD);
 
