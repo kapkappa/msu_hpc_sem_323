@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int64_t *read_matrix(char *filename, int32_t *nrows, int32_t *ncols) {
+int64_t *read_matrix(char *filename, uint32_t *nrows, uint32_t *ncols) {
   FILE *file = fopen(filename, "r");
   if (file == NULL) {
     printf("Can't open matrix file\n");
@@ -13,8 +13,8 @@ int64_t *read_matrix(char *filename, int32_t *nrows, int32_t *ncols) {
   int64_t cnt = 0;
   char type;
   cnt += fread(&type, sizeof(char), 1, file);
-  cnt += fread(nrows, sizeof(int32_t), 1, file);
-  cnt += fread(ncols, sizeof(int32_t), 1, file);
+  cnt += fread(nrows, sizeof(uint32_t), 1, file);
+  cnt += fread(ncols, sizeof(uint32_t), 1, file);
   if (cnt != 3) {
     printf("incorrect read of matrix parameters\n");
     return NULL;
@@ -44,7 +44,7 @@ int64_t *read_matrix(char *filename, int32_t *nrows, int32_t *ncols) {
 }
 
 void write_matrix(char *filename, uint32_t nrows, uint32_t ncols,
-                  uint64_t *vals) {
+                  int64_t *vals) {
   FILE *file = fopen(filename, "w");
   if (file == NULL) {
     perror("cant open file\n");
@@ -52,8 +52,8 @@ void write_matrix(char *filename, uint32_t nrows, uint32_t ncols,
   int64_t cnt = 0;
   char type = 'l';
   cnt += fwrite(&type, sizeof(char), 1, file);
-  cnt += fwrite(&nrows, sizeof(int32_t), 1, file);
-  cnt += fwrite(&ncols, sizeof(int32_t), 1, file);
+  cnt += fwrite(&nrows, sizeof(uint32_t), 1, file);
+  cnt += fwrite(&ncols, sizeof(uint32_t), 1, file);
   if (cnt != 3) {
     perror("incorrect writing matrix parameters\n");
   }
@@ -72,8 +72,8 @@ void write_matrix(char *filename, uint32_t nrows, uint32_t ncols,
   fclose(file);
 }
 
-void print(int32_t nrows, int32_t ncols, int64_t *vals) {
-  int32_t i, j;
+void print(uint32_t nrows, uint32_t ncols, int64_t *vals) {
+  uint32_t i, j;
   printf("Matrix size : %d %d\n", nrows, ncols);
   for (i = 0; i < nrows; i++) {
     for (j = 0; j < ncols; j++) {

@@ -91,7 +91,7 @@ void dense::write(std::string fname) {
 }
 
 int main(int argc, char** argv) {
-    uint32_t rows, cols;
+    int32_t rows, cols;
     cout << "Enter matrix dimensions:\n";
     cin >> rows;
     cin >> cols;
