@@ -30,5 +30,8 @@ gen:
 format:
 	clang-format -i -style=LLVM *.c
 
+test:
+	./test.sh
+
 clean:
 	rm -rf prog gen
