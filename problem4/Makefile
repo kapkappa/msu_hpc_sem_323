@@ -19,7 +19,7 @@ CXXFLAGS += -Wall -O0
 CCFLAGS += -Wall -O0 -DDEBUG
 endif
 
-all: clean prog gen
+all: clean prog gen format
 
 prog:
 	$(MPIC) $(CFLAGS) main.c -o prog
@@ -27,5 +27,8 @@ prog:
 gen:
 	$(CXX) $(CXXFLAGS) gen.cpp -o gen
 
+format:
+	clang-format -i -style=LLVM *.c
+
 clean:
-	rm -rf p*
+	rm -rf prog gen

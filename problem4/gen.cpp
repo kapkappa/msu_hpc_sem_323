@@ -13,7 +13,6 @@ using std::cin;
 typedef int32_t I32;
 typedef int64_t I64;
 
-//template <typename F>
 struct dense {
     int32_t nrows = 0;
     int32_t ncols = 0;
@@ -74,8 +73,9 @@ void dense::write(std::string fname) {
 
     int cnt = 0;
     cnt = fwrite(&elem_type, sizeof(char), 1, f);
+    cnt += fwrite(&nrows, sizeof(int32_t), 1, f);
     cnt += fwrite(&ncols, sizeof(int32_t), 1, f);
-    assert(cnt == 2);
+    assert(cnt == 3);
     cnt = 0;
     if (type == I32) {
         for (int32_t i = 0; i < elems; i++) {
