@@ -94,10 +94,8 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  int world_size; // number of procs
+  int world_size, rank;
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-
-  int rank; // rank of cur proc
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   char *A_name = argv[1];
@@ -105,15 +103,15 @@ int main(int argc, char **argv) {
   char *y_name = argv[3];
 
   // READ SRC VECTOR
-  uint32_t vrows, vcols;
+  uint32_t vrows = 0, vcols = 0;
   int64_t *source_vector = read_matrix(b_name, &vcols, &vrows);
   if (!source_vector) {
     MPI_Finalize();
     return 1;
   }
   // READ MATRIX
-  int64_t *local_val = NULL, *vals = NULL;
   uint32_t nrows = 0, ncols = 0;
+  int64_t *local_val = NULL, *vals = NULL;
   if (rank == 0) {
     vals = read_matrix(A_name, &nrows, &ncols);
   }
@@ -121,7 +119,7 @@ int main(int argc, char **argv) {
   MPI_Bcast(&nrows, 1, MPI_UINT32_T, 0, MPI_COMM_WORLD);
   MPI_Bcast(&ncols, 1, MPI_UINT32_T, 0, MPI_COMM_WORLD);
 
-  if (ncols == 0 && nrows == 0) {
+  if (ncols == 0 || nrows == 0 || vrows == 0 || vcols == 0) {
     MPI_Finalize();
     return 2;
   }
@@ -155,10 +153,11 @@ int main(int argc, char **argv) {
   int64_t *dest = (int64_t *)calloc(nrows, sizeof(int64_t));
   int64_t *work_dest = (int64_t *)malloc(rows * sizeof(int64_t));
 
+
+  //DGEMM
   int i, j, k, niters = 3;
   for (k = 0; k < niters; k++) {
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("Iter: %d\n", k);
     double t1 = MPI_Wtime();
 
     for (i = 0; i < rows; i++)
@@ -183,7 +182,7 @@ int main(int argc, char **argv) {
     MPI_Barrier(MPI_COMM_WORLD);
     double t2 = MPI_Wtime();
 
-    printf("From rank [%d]: time: %f\n", rank, t2 - t1);
+    printf("On iteration: [%d], from rank [%d]: time: %f\n", k, rank, t2 - t1);
   }
 
   if (rank == 0)
